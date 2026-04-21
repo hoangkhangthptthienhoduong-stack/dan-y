@@ -1,7 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. Cấu hình trang
+
+
 st.set_page_config(
     page_title="Văn Học Trẻ - Lập Dàn Ý Pro",
     page_icon="🌸",
