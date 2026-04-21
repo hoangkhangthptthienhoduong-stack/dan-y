@@ -1,47 +1,50 @@
 import streamlit as st
 import google.generativeai as genai
 
-
-
+# 1. Cấu hình trang - Bỏ Sidebar mặc định bằng cách để layout wide và không dùng sidebar
 st.set_page_config(
-    page_title="Văn Học Trẻ - Lập Dàn Ý Pro",
+    page_title="Văn Học Trẻ - Lập Dàn Ý",
     page_icon="🌸",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed" # Tự động thu gọn thanh bên
 )
 
-# 2. CSS Tinh chỉnh độ tương phản (Hết chá mắt)
+# 2. CSS Tinh chỉnh giao diện khung trắng, chữ đậm rõ nét
 st.markdown("""
     <style>
-    /* Nền hồng nhạt dịu mắt */
+    /* Ẩn hoàn toàn nút mở Sidebar để giao diện chỉ còn khung trắng */
+    [data-testid="stSidebarNav"] {display: none;}
+    [data-testid="collapsedControl"] {display: none;}
+    
+    /* Nền hồng cực nhạt gần như trắng cho trang nhã */
     .stApp {
-        background-color: #fff0f3;
+        background-color: #fffafb;
     }
     
-    /* Tiêu đề chính đậm đà */
+    /* Tiêu đề chính màu mận chín */
     .main-title {
         color: #880e4f;
         text-align: center;
         font-family: 'Lexend', sans-serif;
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: 800;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+        margin-top: -50px;
     }
 
-    /* Chỉnh chữ tiêu đề phụ (Nhập đề bài, Ngữ liệu) thành màu đậm hẳn */
+    /* Chữ tiêu đề mục (Nhập đề bài, Ngữ liệu) */
     h3 {
-        color: #4a001f !important; /* Màu mận cực đậm */
+        color: #4a001f !important;
         font-weight: bold !important;
-        font-size: 1.5rem !important;
-        margin-bottom: 5px !important;
+        font-size: 1.6rem !important;
     }
     
-    /* Chỉnh màu chữ hướng dẫn */
+    /* Chữ hướng dẫn màu xám đậm */
     p, span, label {
-        color: #2d2d2d !important; /* Màu xám đen than, cực kỳ rõ */
+        color: #2d2d2d !important;
         font-weight: 500 !important;
     }
 
-    /* Làm nổi bật ô nhập liệu */
+    /* Ô nhập liệu nền trắng viền hồng đậm */
     .stTextInput>div>div>input, .stTextArea>div>div>textarea {
         border-radius: 15px !important;
         border: 2px solid #ad1457 !important;
@@ -50,87 +53,74 @@ st.markdown("""
         font-size: 1.1rem !important;
     }
 
-    /* Nút bấm Gradient Hồng Đậm */
+    /* Nút bấm Gradient hồng đậm */
     .stButton>button {
         background: linear-gradient(90deg, #d81b60, #ad1457) !important;
         color: white !important;
         border-radius: 30px !important;
         border: none !important;
-        padding: 1rem !important;
+        padding: 0.8rem !important;
         font-size: 1.2rem !important;
         font-weight: bold !important;
-        box-shadow: 0 4px 15px rgba(173, 20, 87, 0.3);
+        box-shadow: 0 4px 15px rgba(173, 20, 87, 0.2);
     }
     
-    /* Khung kết quả */
+    /* Khung kết quả dàn ý */
     .result-card {
         background-color: white;
-        padding: 30px;
+        padding: 35px;
         border-radius: 25px;
-        border-left: 10px solid #ad1457;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-top: 8px solid #ad1457;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
         color: #1a1a1a;
+        line-height: 1.6;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Sidebar
-with st.sidebar:
-    st.markdown("<h2 style='text-align: center; color: #880e4f;'>📚 Góc Sáng Tạo</h2>", unsafe_allow_html=True)
-    st.image("https://cdn-icons-png.flaticon.com/512/5903/5903939.png", width=120)
-    st.divider()
-    st.markdown("✨ **Thành viên:** Khang - Sư phạm Ngữ văn")
-    # Khang có thể đổi tên model ở đây nếu muốn hiện trên giao diện cho đúng
-    st.markdown("🖍️ **Công cụ:** Gemini AI")
-    st.image("https://cdn-icons-png.flaticon.com/512/2641/2641409.png", width=80)
-
-# 4. Giao diện chính
+# 3. Tiêu đề trang
 st.markdown('<h1 class="main-title">🌸 TRÌNH LẬP DÀN Ý VĂN HỌC 🌸</h1>', unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 1.1rem; margin-bottom: 30px;'>Nơi biến ngữ liệu thành những ý tưởng tuyệt vời</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.2rem; margin-bottom: 40px;'>Nơi biến ngữ liệu thành những ý tưởng tuyệt vời</p>", unsafe_allow_html=True)
 
 try:
     if "GEMINI_API_KEY" not in st.secrets:
-        st.error("Khang ơi, bạn quên dán API Key vào Secrets rồi!")
+        st.error("Lỗi: Chưa tìm thấy API Key trong mục Secrets!")
     else:
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        
-        # MẸO: Nếu bản 2.5 hết lượt, hãy sửa dòng dưới thành 'gemini-1.5-flash'
         model = genai.GenerativeModel('gemini-2.5-flash')
 
+        # Chia 2 cột cân đối
         col1, col2 = st.columns([1, 1], gap="large")
 
         with col1:
             st.markdown("### 🖋️ Nhập Đề Bài")
-            topic = st.text_input("Đề bài văn:", placeholder="Ví dụ: Phân tích khổ thơ đầu bài Tràng Giang...", label_visibility="collapsed")
+            topic = st.text_input("", placeholder="Nhập đề bài văn tại đây...", label_visibility="collapsed")
             
             st.markdown("### 📖 Cung Cấp Ngữ Liệu")
-            context = st.text_area("Đoạn trích/Ngữ liệu:", height=300, placeholder="Dán đoạn văn hoặc bài thơ vào đây...", label_visibility="collapsed")
+            context = st.text_area("", height=350, placeholder="Dán đoạn văn hoặc bài thơ vào đây...", label_visibility="collapsed")
 
         with col2:
             st.markdown("### 🚀 Phân Tích & Lập Dàn Ý")
-            st.write("Dàn ý chi tiết sẽ giúp bạn viết bài mạch lạc và sâu sắc hơn.")
+            st.write("Nhấn nút để AI bắt đầu xây dựng khung bài viết chi tiết cho bạn.")
             
             if st.button("💝 Bắt Đầu Lập Dàn Ý"):
                 if topic and context:
-                    with st.spinner('💖 AI đang tập trung đọc hiểu ngữ liệu...'):
+                    with st.spinner('💖 AI đang tập trung phân tích...'):
                         prompt = f"""
-                        Bạn là một giáo viên dạy văn giỏi. Hãy phân tích ngữ liệu sau và lập dàn ý chi tiết cho đề bài.
+                        Bạn là giáo viên dạy văn giỏi. Hãy lập dàn ý chi tiết cho đề bài sau dựa trên ngữ liệu được cung cấp.
                         Đề bài: {topic}
                         Ngữ liệu: {context}
                         
-                        Yêu cầu trình bày dàn ý:
-                        1. Mở bài: Dẫn dắt hấp dẫn.
-                        2. Thân bài: Chia luận điểm rõ ràng, trích dẫn đúng ngữ liệu.
-                        3. Đánh giá nghệ thuật đặc sắc.
-                        4. Kết bài: Tổng kết ý nghĩa.
-                        Hãy dùng emoji sinh động.
+                        Dàn ý bao gồm: Mở bài, Thân bài (các luận điểm + dẫn chứng), Nghệ thuật, Kết bài.
+                        Sử dụng emoji phù hợp.
                         """
                         response = model.generate_content(prompt)
-                        st.success("Xong rồi nè Khang ơi! ✨")
+                        # ĐỔI CÂU THÔNG BÁO THEO Ý KHANG
+                        st.success("✅ Đã hoàn tất dàn ý!") 
                         st.markdown(f'<div class="result-card">{response.text}</div>', unsafe_allow_html=True)
                         st.balloons()
                 else:
-                    st.warning("Bạn điền thiếu thông tin kìa, kiểm tra lại nhé! 🌸")
+                    st.warning("Khang ơi, nhớ điền đủ thông tin vào 2 ô bên trái nhé! 🌸")
 
 except Exception as e:
-    st.error(f"Hệ thống đang bảo trì hoặc hết lượt dùng: {e}")
+    st.error(f"Hệ thống đang bận: {e}")
